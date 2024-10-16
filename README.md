@@ -18,9 +18,9 @@ The current architecture plan has the following pieces:
 * S3. I'd imagine any S3 compatible storage would be ok.
 * The Aggregator.  This will get all the files from S3 and put the results in the data stores.  There may end up being some logic here.
 * The Data Store.  I'm not 100% sure what this will be.  It will likely need to support database-like things (like copies of pg_activity), but also some time series information.  Ironically, this may not be postgres Possibilities:
- * Postgres/VictoriaMetrics
- * Postgres/Timescale
- * Clickhouse
+  * Postgres/VictoriaMetrics
+  * Postgres/Timescale
+  * Clickhouse
 * Visualization
  * Right now I'd expect this to just be Grafana connecting to the data sources, and a set of dashboards.  
 
