@@ -44,3 +44,7 @@ These are some of the tools that I'll draw inspiration from, and may very really
 As I write this, the only thing that exists is the readme, so it's 100% safe.
 
 That being said, my intent is that the only thing this will do to the database is essentially "select * from pg_stat_statements;", and similar.  Analysis will be done later on.  I can't imagine what would be added to make it not safe, but production usage is at your own discretion.
+
+## A few other notes
+
+I have not had a chance to do a lot with any of the AI coding tools, so I'll be employing those to test them out.  
