@@ -5,6 +5,7 @@
 # Modifications [Grafana Labs]:
 # - Removed unnecessary parts for the purposes of this demo
 # - Added PostgreSQL datasource for pgtracker database
+# - Added CloudWatch datasource for LocalStack
 
 apiVersion: 1
 
@@ -39,3 +40,14 @@ datasources:
       connMaxLifetime: 14400 # Grafana v5.4+
       postgresVersion: 1600 # 903=9.3, 904=9.4, 905=9.5, 906=9.6, 1000=10, 1100=11, 1200=12, 1300=13, 1400=14, 1500=15, 1600=16
       timescaledb: false
+  - name: LocalStack CloudWatch
+    type: cloudwatch
+    uid: localstack-cloudwatch
+    jsonData:
+      authType: keys
+      defaultRegion: us-east-1
+      customMetricsNamespaces: ""
+      endpoint: http://localstack:4566
+    secureJsonData:
+      accessKey: test
+      secretKey: test

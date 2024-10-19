@@ -71,9 +71,7 @@ services:
     ports:
       - "4566-4599:4566-4599"
     environment:
-      - SERVICES=s3,sqs
-      - SQS_CLOUDWATCH_METRICS=1
-      - SQS_CLOUDWATCH_METRICS_REPORT_INTERVAL=60 
+      - SERVICES=s3,sqs,cloudwatch,ec2
       - DEBUG=1
       - DATA_DIR=/tmp/localstack/data
     volumes:
