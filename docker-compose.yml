@@ -14,7 +14,9 @@ services:
       - pgnet
     volumes:
       - ./defaults/monitordb/init-scripts:/docker-entrypoint-initdb.d
+      - ./defaults/monitordb/postgresql.conf:/etc/postgresql/postgresql.conf
       - monitordb_data:/var/lib/postgresql/data
+    command: ["postgres", "-c", "config_file=/etc/postgresql/postgresql.conf"]
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
@@ -61,7 +63,6 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-
 
 networks:
   pgnet:
