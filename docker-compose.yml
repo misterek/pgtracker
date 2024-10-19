@@ -64,6 +64,39 @@ services:
       timeout: 10s
       retries: 3
 
+  # Start up localstack for s3 and sqs simulation, and precreate the bucket and queue
+  localstack:
+    image: localstack/localstack:latest
+    container_name: localstack
+    ports:
+      - "4566-4599:4566-4599"
+    environment:
+      - SERVICES=s3,sqs
+      - SQS_CLOUDWATCH_METRICS=1
+      - SQS_CLOUDWATCH_METRICS_REPORT_INTERVAL=60 
+      - DEBUG=1
+      - DATA_DIR=/tmp/localstack/data
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - pgnet
+
+  # Create the S3 bucket and SQS queue, if they don't exist
+  localstack-init:
+    image: amazon/aws-cli
+    container_name: localstack-init
+    depends_on:
+      - localstack
+    environment:
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+      - AWS_DEFAULT_REGION=us-east-1
+    volumes:
+      - ./defaults/localstack/init-aws.sh:/init-aws.sh
+    entrypoint: ["/bin/bash", "/init-aws.sh"]
+    networks:
+      - pgnet
+
 networks:
   pgnet:
     driver: bridge
