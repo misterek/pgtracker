@@ -1,0 +1,73 @@
+version: '3.8'
+
+services:
+  # The database instance to monitor
+  monitordb:
+    image: postgres:16
+    container_name: monitordb
+    environment:
+      POSTGRES_DB: test
+      POSTGRES_PASSWORD: ${TESTDB_PASSWORD:-password}
+    ports:
+      - "5432:5432"
+    networks:
+      - pgnet
+    volumes:
+      - ./defaults/monitordb/init-scripts:/docker-entrypoint-initdb.d
+      - monitordb_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Destination Database. Where we will keep collected data.
+  pgtrackerdb:
+    image: postgres:16
+    container_name: pgtrackerdb
+    environment:
+      POSTGRES_DB: pgtracker
+      POSTGRES_PASSWORD: ${DESTDB_PASSWORD:-password}
+    ports:
+      - "5433:5432"
+    networks:
+      - pgnet
+    volumes:
+      - pgtrackerdb_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Grafana
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    networks:
+      - pgnet
+    volumes:
+      - ./defaults/grafana/grafana.ini:/etc/grafana/grafana.ini
+      - ./defaults/grafana/provisioning/:/etc/grafana/provisioning/
+      - grafana_data:/var/lib/grafana
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-admin}
+      - GF_SERVER_HTTP_ADDR=0.0.0.0
+      - GF_SERVER_HTTP_PORT=3000
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:3000/api/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+
+networks:
+  pgnet:
+    driver: bridge
+
+volumes:
+  monitordb_data:
+  pgtrackerdb_data:
+  grafana_data:

@@ -1,0 +1,41 @@
+# SPDX-License-Identifier: Apache-2.0
+# Provenance-includes-location: https://github.com/open-telemetry/opentelemetry-demo/blob/main/src/grafana/provisioning/datasources/default.yaml
+# Provenance-includes-license: Apache-2.0
+# Provenance-includes-copyright: The OpenTelemetry Authors.
+# Modifications [Grafana Labs]:
+# - Removed unnecessary parts for the purposes of this demo
+# - Added PostgreSQL datasource for pgtracker database
+
+apiVersion: 1
+
+datasources:
+  - name: pgtrackerdb
+    uid: pgtracking-db
+    type: postgres
+    url: pgtrackerdb:5432
+    database: pgtracker
+    user: postgres
+    secureJsonData:
+      password: password
+    jsonData:
+      sslmode: 'disable' # disable/require/verify-ca/verify-full
+      maxOpenConns: 100 # Grafana v5.4+
+      maxIdleConns: 100 # Grafana v5.4+
+      connMaxLifetime: 14400 # Grafana v5.4+
+      postgresVersion: 1600 # 903=9.3, 904=9.4, 905=9.5, 906=9.6, 1000=10, 1100=11, 1200=12, 1300=13, 1400=14, 1500=15, 1600=16
+      timescaledb: false
+  - name: monitordb
+    uid: monitordb-db
+    type: postgres
+    url: monitordb:5432
+    database: test
+    user: postgres
+    secureJsonData:
+      password: password
+    jsonData:
+      sslmode: 'disable' # disable/require/verify-ca/verify-full
+      maxOpenConns: 100 # Grafana v5.4+
+      maxIdleConns: 100 # Grafana v5.4+
+      connMaxLifetime: 14400 # Grafana v5.4+
+      postgresVersion: 1600 # 903=9.3, 904=9.4, 905=9.5, 906=9.6, 1000=10, 1100=11, 1200=12, 1300=13, 1400=14, 1500=15, 1600=16
+      timescaledb: false
