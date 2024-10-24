@@ -129,6 +129,41 @@ services:
     #   - AWS_ENDPOINT_URL=http://localstack:4566
     restart: unless-stopped
 
+
+  # Aggregator service
+  aggregator:
+    build:
+      context: ./aggregator
+      dockerfile: Dockerfile
+    container_name: aggregator
+    develop:
+      watch:
+        - action: rebuild
+          path: aggregate.py
+    volumes:
+      - ./aggregator:/app
+    depends_on:
+      - pgtrackerdb
+      - localstack
+    networks:
+      - pgnet
+    environment:
+      - AWS_ACCESS_KEY_ID=fakeAccessKey
+      - AWS_SECRET_ACCESS_KEY=fakeSecretKey
+      - AWS_DEFAULT_REGION=us-east-1
+    #   - MONITORDB_HOST=monitordb
+    #   - MONITORDB_PORT=5432
+    #   - MONITORDB_NAME=test
+    #   - MONITORDB_USER=postgres
+    #   - MONITORDB_PASSWORD=${TESTDB_PASSWORD:-password}
+    #   - PGTRACKERDB_HOST=pgtrackerdb
+    #   - PGTRACKERDB_PORT=5432
+    #   - PGTRACKERDB_NAME=pgtracker
+    #   - PGTRACKERDB_USER=postgres
+    #   - PGTRACKERDB_PASSWORD=${DESTDB_PASSWORD:-password}
+    #   - AWS_ENDPOINT_URL=http://localstack:4566
+    restart: unless-stopped
+
 networks:
   pgnet:
     driver: bridge
