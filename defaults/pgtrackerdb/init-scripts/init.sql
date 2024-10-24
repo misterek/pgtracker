@@ -1,3 +1,5 @@
+CREATE EXTENSION IF NOT EXISTS timescaledb;
+
 CREATE TABLE IF NOT EXISTS pss (
     id SERIAL ,
     queryid BIGINT,
@@ -44,3 +46,21 @@ CREATE TABLE IF NOT EXISTS psa (
 );
 
 CREATE INDEX IF NOT EXISTS idx_psa_on_sample_time ON psa(sample_time);
+
+
+CREATE TABLE IF NOT EXISTS pss_timescale (
+    sample_time TIMESTAMPTZ NOT NULL,
+    queryid BIGINT,
+    calls BIGINT,
+    total_time DOUBLE PRECISION,
+    rows BIGINT,
+    call_diff BIGINT,
+    time_diff DOUBLE PRECISION,
+    rows_diff BIGINT,
+    seconds_elapsed BIGINT,
+    calls_per_second DOUBLE PRECISION,
+    rows_per_second DOUBLE PRECISION,
+    time_per_call DOUBLE PRECISION
+);
+
+SELECT create_hypertable('pss_timescale', 'sample_time');
