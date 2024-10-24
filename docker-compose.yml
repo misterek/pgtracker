@@ -1,8 +1,7 @@
-
 services:
   # The database instance to monitor
   monitordb:
-    image: postgres:16
+    image: timescale/timescaledb-ha:pg16
     container_name: monitordb
     environment:
       POSTGRES_DB: test
@@ -109,28 +108,19 @@ services:
     volumes:
       - ./collector:/app
     depends_on:
-      - monitordb
-      - pgtrackerdb
-      - localstack
+      monitordb:
+        condition: service_healthy
+      pgtrackerdb:
+        condition: service_healthy
+      localstack:
+        condition: service_started
     networks:
       - pgnet
     environment:
       - AWS_ACCESS_KEY_ID=fakeAccessKey
       - AWS_SECRET_ACCESS_KEY=fakeSecretKey
       - AWS_DEFAULT_REGION=us-east-1
-    #   - MONITORDB_HOST=monitordb
-    #   - MONITORDB_PORT=5432
-    #   - MONITORDB_NAME=test
-    #   - MONITORDB_USER=postgres
-    #   - MONITORDB_PASSWORD=${TESTDB_PASSWORD:-password}
-    #   - PGTRACKERDB_HOST=pgtrackerdb
-    #   - PGTRACKERDB_PORT=5432
-    #   - PGTRACKERDB_NAME=pgtracker
-    #   - PGTRACKERDB_USER=postgres
-    #   - PGTRACKERDB_PASSWORD=${DESTDB_PASSWORD:-password}
-    #   - AWS_ENDPOINT_URL=http://localstack:4566
     restart: unless-stopped
-
 
   # Aggregator service
   aggregator:
@@ -145,25 +135,16 @@ services:
     volumes:
       - ./aggregator:/app
     depends_on:
-      - pgtrackerdb
-      - localstack
+      pgtrackerdb:
+        condition: service_healthy
+      localstack:
+        condition: service_started
     networks:
       - pgnet
     environment:
       - AWS_ACCESS_KEY_ID=fakeAccessKey
       - AWS_SECRET_ACCESS_KEY=fakeSecretKey
       - AWS_DEFAULT_REGION=us-east-1
-    #   - MONITORDB_HOST=monitordb
-    #   - MONITORDB_PORT=5432
-    #   - MONITORDB_NAME=test
-    #   - MONITORDB_USER=postgres
-    #   - MONITORDB_PASSWORD=${TESTDB_PASSWORD:-password}
-    #   - PGTRACKERDB_HOST=pgtrackerdb
-    #   - PGTRACKERDB_PORT=5432
-    #   - PGTRACKERDB_NAME=pgtracker
-    #   - PGTRACKERDB_USER=postgres
-    #   - PGTRACKERDB_PASSWORD=${DESTDB_PASSWORD:-password}
-    #   - AWS_ENDPOINT_URL=http://localstack:4566
     restart: unless-stopped
 
 networks:
