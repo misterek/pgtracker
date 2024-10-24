@@ -25,6 +25,12 @@ class PostgresQueryScheduler:
         if self.connection:
             await self.connection.close()
 
+    def format_csv_value(self, value):
+        """Format a single value for CSV."""
+        if value is None:
+            return '""'
+        return f'"{str(value).replace(\'"\', \'\\"\')}"\n'
+
     async def run_query(self, query, filename):
         """
         Run a single query using the shared connection.
@@ -38,17 +44,21 @@ class PostgresQueryScheduler:
 
             scrape_date = ""
             if result:
-                output = io.StringIO()
-                writer = csv.writer(output, quoting=csv.QUOTE_ALL)
-                writer.writerow(result[0].keys())
+                lines = []
+                
+                # Get column names from the first row
+                keys = result[0].keys()
+                header = ','.join(f'"{key}"' for key in keys)
+                lines.append(header + '\n')
 
+                # Format each row
                 for row in result:
-                    writer.writerow(row)
-
+                    values = [self.format_csv_value(row[key]).strip() for key in keys]
+                    lines.append(','.join(values) + '\n')
                     scrapedate = row[-1].strftime('%Y-%m-%d_%H_%M_%S')
 
-                # Move the cursor to the start
-                output.seek(0)
+                # Join all lines
+                output = ''.join(lines)
 
                 s3_client = boto3.client(
                     's3',
@@ -57,7 +67,7 @@ class PostgresQueryScheduler:
                 s3_client.put_object(
                     Bucket="pgtracker",
                     Key=f"{filename}-{scrapedate}.csv",
-                    Body=output.getvalue().encode('utf-8')
+                    Body=output.encode('utf-8')
                 )
             print(f"Query completed in {time.time() - start:.2f} seconds", file=sys.stderr)
 
