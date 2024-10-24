@@ -113,69 +113,9 @@ def insert_pg_stat_statements(conn, data):
                 VALUES ({values_placeholders});
             """
 
-            # Execute the query with the data dictionary
             cur.execute(query, data)
             conn.commit()
-    #         # Since we're resetting pg_stat_statements after each collection,
-    #         # we can use the values directly
-    #         interval = 30  # Collection interval in seconds
-            
-    #         # Calculate rates
-    #         calls_per_second = data['calls'] / interval if data['calls'] is not None else 0
-    #         rows_per_second = data['rows'] / interval if data['rows'] is not None else 0
-    #         time_per_call = data['total_time'] / data['calls'] if data['calls'] is not None and data['calls'] > 0 else 0
-            
-    #         cur.execute("""
-    #             INSERT INTO pss (
-    #                 queryid, calls, total_time, rows,
-    #                 call_diff, time_diff, rows_diff,
-    #                 seconds_elapsed, calls_per_second,
-    #                 rows_per_second, time_per_call,
-    #                 sample_time
-    #             ) VALUES (
-    #                 %(queryid)s, %(calls)s, %(total_time)s, %(rows)s,
-    #                 %(calls)s, %(total_time)s, %(rows)s,
-    #                 %(interval)s, %(calls_per_second)s,
-    #                 %(rows_per_second)s, %(time_per_call)s,
-    #                 %(sample_time)s
-    #             )
-    #         """, {
-    #             'queryid': data['queryid'],
-    #             'calls': data['calls'],
-    #             'total_time': data['total_time'],
-    #             'rows': data['rows'],
-    #             'interval': interval,
-    #             'calls_per_second': calls_per_second,
-    #             'rows_per_second': rows_per_second,
-    #             'time_per_call': time_per_call,
-    #             'sample_time': data['sample_time']
-    #         })
-    #         cur.execute("""
-    #             INSERT INTO pss_timescale (
-    #                 queryid, calls, total_time, rows,
-    #                 call_diff, time_diff, rows_diff,
-    #                 seconds_elapsed, calls_per_second,
-    #                 rows_per_second, time_per_call,
-    #                 sample_time
-    #             ) VALUES (
-    #                 %(queryid)s, %(calls)s, %(total_time)s, %(rows)s,
-    #                 %(calls)s, %(total_time)s, %(rows)s,
-    #                 %(interval)s, %(calls_per_second)s,
-    #                 %(rows_per_second)s, %(time_per_call)s,
-    #                 %(sample_time)s
-    #             )
-    #         """, {
-    #             'queryid': data['queryid'],
-    #             'calls': data['calls'],
-    #             'total_time': data['total_time'],
-    #             'rows': data['rows'],
-    #             'interval': interval,
-    #             'calls_per_second': calls_per_second,
-    #             'rows_per_second': rows_per_second,
-    #             'time_per_call': time_per_call,
-    #             'sample_time': data['sample_time']
-    #         })
-    #         conn.commit()
+    
     except Exception as e:
         conn.rollback()
         raise e
