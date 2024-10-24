@@ -24,7 +24,7 @@ services:
 
   # Destination Database. Where we will keep collected data.
   pgtrackerdb:
-    image: timescale/timescaledb-ha:16
+    image: timescale/timescaledb-ha:pg16
     container_name: pgtrackerdb
     environment:
       POSTGRES_DB: pgtracker
