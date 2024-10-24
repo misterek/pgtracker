@@ -20,15 +20,15 @@ CREATE TABLE IF NOT EXISTS pss (
 CREATE TABLE IF NOT EXISTS _main_partition  PARTITION OF pss FOR VALUES FROM ('2024-06-30') TO ('2025-07-01');
 
 CREATE TABLE IF NOT EXISTS psa (
-    datid TEXT,
+    datid BIGINT NULL,
     datname TEXT,
-    pid INTEGER,
-    usesysid TEXT,
+    pid BIGINT,
+    usesysid BIGINT NULL,
     usename TEXT,
     application_name TEXT,
     client_addr TEXT,
     client_hostname TEXT,
-    client_port INTEGER,
+    client_port INTEGER NULL,
     backend_start TIMESTAMP,
     xact_start TIMESTAMP,
     query_start TIMESTAMP,

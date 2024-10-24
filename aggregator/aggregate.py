@@ -4,6 +4,8 @@ import time
 import os
 import sys
 import psycopg2
+import csv
+import io
 from datetime import datetime
 
 # Initialize AWS clients with localstack endpoint
@@ -34,28 +36,47 @@ def get_db_connection():
         port=os.environ.get("POSTGRES_PORT", "5432")
     )
 
+def convert_empty_to_null(record):
+    # Fields that should be converted to integers
+    int_fields = ['datid', 'pid', 'usesysid', 'client_port']
+    
+    for field in int_fields:
+        if field in record and (record[field] == '' or record[field] == 'None' or record[field] is None):
+            record[field] = None
+        elif field in record and record[field] is not None:
+            try:
+                record[field] = int(record[field])
+            except (ValueError, TypeError):
+                record[field] = None
+    return record
+
 def insert_pg_stat_activity(conn, data):
     try:
         with conn.cursor() as cur:
             cur.execute("""
-                INSERT INTO pga (
-                    datid, datname, pid, leader_pid, usesysid, usename, application_name,
+                INSERT INTO psa (
+                    datid, datname, pid, usesysid, usename, application_name,
                     client_addr, client_hostname, client_port, backend_start, xact_start,
                     query_start, state_change, wait_event_type, wait_event, state,
-                    backend_xid, backend_xmin, query, backend_type, collected_at
+                    backend_xid, backend_xmin, query, backend_type, sample_time
                 ) VALUES (
-                    %(datid)s, %(datname)s, %(pid)s, %(leader_pid)s, %(usesysid)s, 
-                    %(usename)s, %(application_name)s, %(client_addr)s, %(client_hostname)s,
+                    %(datid)s, %(datname)s, %(pid)s, %(usesysid)s, %(usename)s, 
+                    %(application_name)s, %(client_addr)s, %(client_hostname)s,
                     %(client_port)s, %(backend_start)s, %(xact_start)s, %(query_start)s,
                     %(state_change)s, %(wait_event_type)s, %(wait_event)s, %(state)s,
                     %(backend_xid)s, %(backend_xmin)s, %(query)s, %(backend_type)s,
-                    %(collected_at)s
+                    %(sample_time)s
                 )
             """, data)
             conn.commit()
     except Exception as e:
         conn.rollback()
         raise e
+
+def process_csv_to_dict(csv_content):
+    csv_file = io.StringIO(csv_content)
+    reader = csv.DictReader(csv_file)
+    return list(reader)
 
 def process_message(message):
     try:
@@ -81,14 +102,25 @@ def process_message(message):
                     if key.startswith('pg_stat_activity'):
                         conn = get_db_connection()
                         try:
-                            data = json.loads(file_content)
+                            data_list = process_csv_to_dict(file_content)
                             # Convert timestamp strings to datetime objects
                             timestamp_fields = ['backend_start', 'xact_start', 'query_start', 'state_change']
-                            for record in data:
+                            for record in data_list:
+                                # Convert empty strings and 'None' to None for all fields
+                                for key, value in record.items():
+                                    if value == 'None' or value == '':
+                                        record[key] = None
+                                
+                                # Convert numeric fields
+                                record = convert_empty_to_null(record)
+                                
+                                # Handle timestamps
                                 for field in timestamp_fields:
                                     if record.get(field):
                                         record[field] = datetime.fromisoformat(record[field].replace('Z', '+00:00'))
-                                record['collected_at'] = datetime.now()
+                                # Use the last column (now()) as sample_time
+                                record['sample_time'] = datetime.fromisoformat(record.pop('now').replace('Z', '+00:00'))
+                                
                                 insert_pg_stat_activity(conn, record)
                             sys.stderr.write(f"Successfully processed pg_stat_activity data\n")
                         except Exception as e:
