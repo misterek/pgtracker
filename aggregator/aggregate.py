@@ -35,17 +35,17 @@ def process_message(message):
                     bucket = record['s3']['bucket']['name']
                     key = record['s3']['object']['key']
                     
-                    
                     sys.stderr.write(f"Downloading file: {key} from bucket: {bucket}\n")
                     
-                    # Download file from S3
-                    download_path = f"/tmp/{key}"
-                    os.makedirs(os.path.dirname(download_path), exist_ok=True)
-                    s3.download_file(bucket, key, download_path)
+                    # Download file into memory from S3
+                    response = s3.get_object(Bucket=bucket, Key=key)
+                    file_content = response['Body'].read().decode('utf-8')
                     
-                    sys.stderr.write(f"Successfully downloaded file to: {download_path}\n")
+                    sys.stderr.write(f"Successfully downloaded file into memory\n")
                     
-                    # TODO: Process the downloaded file as needed
+                    # Process the file content line by line
+                    for line in file_content.splitlines():
+                        sys.stderr.write(f"Line: {line}\n")
                     
         return True
     except Exception as e:
