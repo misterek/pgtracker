@@ -3,6 +3,8 @@ import json
 import time
 import os
 import sys
+import psycopg2
+from datetime import datetime
 
 # Initialize AWS clients with localstack endpoint
 endpoint_url = "http://localstack:4566"
@@ -22,6 +24,38 @@ s3 = boto3.client('s3',
 
 # Get queue URL
 queue_url = f"{endpoint_url}/000000000000/pgtracker-queue"
+
+def get_db_connection():
+    return psycopg2.connect(
+        dbname="pgtracker",
+        user=os.environ.get("POSTGRES_USER", "postgres"),
+        password=os.environ.get("POSTGRES_PASSWORD", "password"),
+        host=os.environ.get("POSTGRES_HOST", "pgtrackerdb"),
+        port=os.environ.get("POSTGRES_PORT", "5432")
+    )
+
+def insert_pg_stat_activity(conn, data):
+    try:
+        with conn.cursor() as cur:
+            cur.execute("""
+                INSERT INTO pga (
+                    datid, datname, pid, leader_pid, usesysid, usename, application_name,
+                    client_addr, client_hostname, client_port, backend_start, xact_start,
+                    query_start, state_change, wait_event_type, wait_event, state,
+                    backend_xid, backend_xmin, query, backend_type, collected_at
+                ) VALUES (
+                    %(datid)s, %(datname)s, %(pid)s, %(leader_pid)s, %(usesysid)s, 
+                    %(usename)s, %(application_name)s, %(client_addr)s, %(client_hostname)s,
+                    %(client_port)s, %(backend_start)s, %(xact_start)s, %(query_start)s,
+                    %(state_change)s, %(wait_event_type)s, %(wait_event)s, %(state)s,
+                    %(backend_xid)s, %(backend_xmin)s, %(query)s, %(backend_type)s,
+                    %(collected_at)s
+                )
+            """, data)
+            conn.commit()
+    except Exception as e:
+        conn.rollback()
+        raise e
 
 def process_message(message):
     try:
@@ -43,9 +77,29 @@ def process_message(message):
                     
                     sys.stderr.write(f"Successfully downloaded file into memory\n")
                     
-                    # Process the file content line by line
-                    for line in file_content.splitlines():
-                        sys.stderr.write(f"Line: {line}\n")
+                    # Process pg_stat_activity data
+                    if key.startswith('pg_stat_activity'):
+                        conn = get_db_connection()
+                        try:
+                            data = json.loads(file_content)
+                            # Convert timestamp strings to datetime objects
+                            timestamp_fields = ['backend_start', 'xact_start', 'query_start', 'state_change']
+                            for record in data:
+                                for field in timestamp_fields:
+                                    if record.get(field):
+                                        record[field] = datetime.fromisoformat(record[field].replace('Z', '+00:00'))
+                                record['collected_at'] = datetime.now()
+                                insert_pg_stat_activity(conn, record)
+                            sys.stderr.write(f"Successfully processed pg_stat_activity data\n")
+                        except Exception as e:
+                            sys.stderr.write(f"Error processing pg_stat_activity data: {str(e)}\n")
+                            raise e
+                        finally:
+                            conn.close()
+                    else:
+                        # Process other file types as before
+                        for line in file_content.splitlines():
+                            sys.stderr.write(f"Line: {line}\n")
                     
         return True
     except Exception as e:
