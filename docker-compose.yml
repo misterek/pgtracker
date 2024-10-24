@@ -35,6 +35,8 @@ services:
       - pgnet
     volumes:
       - pgtrackerdb_data:/var/lib/postgresql/data
+      - ./defaults/pgtrackerdb/init-scripts:/docker-entrypoint-initdb.d
+      - ./defaults/pgtrackerdb/postgresql.conf:/etc/postgresql/postgresql.conf
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
