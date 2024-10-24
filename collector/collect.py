@@ -95,7 +95,7 @@ if __name__ == "__main__":
 
     # Define queries, their intervals (in seconds), and filenames
     queries = [
-        ("SELECT *,now() FROM pg_stat_statements;", 30, "pg_stat_statements"),
+        ("SELECT *,now() FROM pg_stat_activity;", 30, "pg_stat_activity"),
     ]
 
     print(DATABASE_DSN)
