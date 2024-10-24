@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS pss (
 
 
 -- separate these out as it gets bigger
-CREATE TABLE IF NOT EXISTS _main_partition  PARTITION OF pss FOR VALUES FROM ('2024-06-30') TO ('2025-07-01');
+CREATE TABLE IF NOT EXISTS _main_partition  PARTITION OF pss FOR VALUES FROM ('2023-01-01') TO ('2025-07-01');
 
 CREATE TABLE IF NOT EXISTS psa (
     datid BIGINT NULL,
