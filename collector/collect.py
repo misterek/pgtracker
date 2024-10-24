@@ -45,7 +45,7 @@ class PostgresQueryScheduler:
                 for row in result:
                     writer.writerow(row)
 
-                    scrapedate = row[-1].strftime('%Y-%m-%d:%H:%M:%S')
+                    scrapedate = row[-1].strftime('%Y-%m-%d_%H_%M_%S')
 
                 # Move the cursor to the start
                 output.seek(0)
