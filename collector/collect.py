@@ -61,16 +61,13 @@ class PostgresQueryScheduler:
                 )
             print(f"Query completed in {time.time() - start:.2f} seconds", file=sys.stderr)
 
-    async def schedule_query(self, query, interval, filename, reset_query=None):
+    async def schedule_query(self, query, interval, filename):
         """
         Schedule a query to run at a specific interval.
         If reset_query is provided, execute it after the main query.
         """
         while True:
             await self.run_query(query, filename)
-            if reset_query:
-                async with self.connection.transaction():
-                    await self.connection.execute(reset_query)
             await asyncio.sleep(interval)
 
     async def main(self, queries):
@@ -82,12 +79,8 @@ class PostgresQueryScheduler:
         # Create and schedule all query tasks
         tasks = []
         for query_info in queries:
-            if len(query_info) == 4:  # If reset_query is provided
-                query, interval, filename, reset_query = query_info
-                tasks.append(self.schedule_query(query, interval, filename, reset_query))
-            else:  # No reset_query
-                query, interval, filename = query_info
-                tasks.append(self.schedule_query(query, interval, filename))
+            query, interval, filename = query_info
+            tasks.append(self.schedule_query(query, interval, filename))
 
         # Run all tasks concurrently
         await asyncio.gather(*tasks)
@@ -106,14 +99,10 @@ if __name__ == "__main__":
         ("SELECT *, now() FROM pg_stat_activity;", 30, "pg_stat_activity"),
         ("""
         SELECT 
-            queryid,
-            calls,
-            total_exec_time as total_time,
-            rows,
+            *,
             now()
-        FROM pg_stat_statements
-        WHERE queryid IS NOT NULL
-        """, 30, "pg_stat_statements", "SELECT pg_stat_statements_reset()")
+        FROM pg_stat_statements;
+        """, 30, "pg_stat_statements")
     ]
 
     print(DATABASE_DSN)
