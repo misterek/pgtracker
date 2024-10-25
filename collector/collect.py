@@ -113,10 +113,11 @@ WHERE relkind = 'r'  -- 'r' means regular table
   (
     """
     SELECT 
-    i.relname AS index_name,
-    t.relname AS table_name,
-    s.nspname AS schema_name,
-    pg_get_indexdef(i.oid) AS index_definition, now()
+    i.oid AS index_oid,       -- OID of the index
+    i.relname AS index_name,  -- Name of the index
+    t.oid AS table_oid,       -- OID of the table the index belongs to
+    s.nspname AS schema_name, -- Schema name
+    pg_get_indexdef(i.oid) AS index_definition -- SQL definition of the index
 FROM 
     pg_class i
 JOIN 
@@ -128,7 +129,7 @@ JOIN
 WHERE 
     s.nspname NOT IN ('pg_catalog', 'information_schema', 'pg_toast')
 ORDER BY 
-    s.nspname, t.relname, i.relname;"""
+    s.nspname, i.relname;"""
   , 60, "index")
 
     ]

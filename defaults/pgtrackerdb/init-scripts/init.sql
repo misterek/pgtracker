@@ -81,3 +81,23 @@ CREATE TABLE IF NOT EXISTS db_info (
     full_version TEXT,
     version TEXT
 );
+
+CREATE TABLE IF NOT EXISTS tables (
+    id SERIAL ,
+    name TEXT,
+    oid OID ,
+    schema TEXT
+);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_tables_on_oid ON tables(oid);
+
+
+CREATE TABLE IF NOT EXISTS indexes (
+    id SERIAL,
+    name TEXT,
+    oid OID,
+    table_oid OID REFERENCES tables(oid),
+    schema TEXT,
+    definition TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_indexes_table_oid ON indexes(table_oid);

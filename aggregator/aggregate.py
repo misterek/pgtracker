@@ -144,6 +144,23 @@ def insert_version_info(conn, data):
         conn.rollback()
         raise e
 
+def insert_tables_info(conn, data):
+    try:
+        with conn.cursor() as cur:
+
+            
+            # Insert new table data
+            for record in data:
+                cur.execute("""
+                    INSERT INTO tables (name, oid, schema)
+                    VALUES (%s, %s, %s) ON CONFLICT DO NOTHING
+                """, (record['table_name'], record['oid'], record['schema_name']))
+            
+            conn.commit()
+    except Exception as e:
+        conn.rollback()
+        raise e
+
 def process_csv_to_dict(csv_content):
     csv_file = io.StringIO(csv_content)
     reader = csv.DictReader(csv_file)
@@ -173,6 +190,8 @@ def process_message(message):
                     try:
                         if 'version' in file_key:
                             insert_version_info(conn, process_csv_to_dict(file_content))
+                        elif 'tables' in file_key:
+                            insert_tables_info(conn, process_csv_to_dict(file_content))
                         else:
                             # Handle CSV files (activity and statements)
                             data_list = process_csv_to_dict(file_content)
