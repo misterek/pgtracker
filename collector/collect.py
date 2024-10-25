@@ -103,7 +103,33 @@ if __name__ == "__main__":
             now()
         FROM pg_stat_statements;
         """, 30, "pg_stat_statements"),
-        ("SELECT version(), now(); ", 300, "version")
+        ("SELECT version(), now(); ", 300, "version"),
+        ("""
+        SELECT oid, relname AS table_name, relnamespace::regnamespace AS schema_name, now()
+FROM pg_class
+WHERE relkind = 'r'  -- 'r' means regular table
+  AND relnamespace::regnamespace NOT IN ('pg_catalog', 'information_schema');
+  """, 60, "tables"),
+  (
+    """
+    SELECT 
+    i.relname AS index_name,
+    t.relname AS table_name,
+    s.nspname AS schema_name,
+    pg_get_indexdef(i.oid) AS index_definition, now()
+FROM 
+    pg_class i
+JOIN 
+    pg_index ix ON i.oid = ix.indexrelid
+JOIN 
+    pg_class t ON ix.indrelid = t.oid
+JOIN 
+    pg_namespace s ON t.relnamespace = s.oid
+WHERE 
+    s.nspname NOT IN ('pg_catalog', 'information_schema', 'pg_toast')
+ORDER BY 
+    s.nspname, t.relname, i.relname;"""
+  , 60, "index")
 
     ]
 
