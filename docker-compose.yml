@@ -147,6 +147,20 @@ services:
       - AWS_DEFAULT_REGION=us-east-1
     restart: unless-stopped
 
+  # Load Generator service
+  loadgenerator:
+    build:
+      context: ./defaults/loadgenerator
+      dockerfile: Dockerfile
+    container_name: loadgenerator
+    ports:
+      - "8089:8089"
+    networks:
+      - pgnet
+    depends_on:
+      monitordb:
+        condition: service_healthy
+
 networks:
   pgnet:
     driver: bridge
