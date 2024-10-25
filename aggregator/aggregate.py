@@ -115,7 +115,6 @@ def insert_pg_stat_statements(conn, data):
         raise e
 
 def insert_version_info(conn, data):
-    sys.stderr.write(f"{data}")
     data = data[0]
 
     try:
@@ -123,21 +122,17 @@ def insert_version_info(conn, data):
             # Check if version info already exists
             cur.execute("SELECT COUNT(*) FROM db_info")
             
-            sys.stderr.write(f"A\n")
 
             count = cur.fetchone()[0]
-            sys.stderr.write(f"B\n")
 
             if count == 0:
                 # Insert new version info if table is empty
                 full_version = data['version']
                 version = full_version.split()[1]
-                sys.stderr.write(f"C\n")
                 cur.execute("""
                     INSERT INTO db_info (full_version, version)
                     VALUES (%s, %s)
                 """, (full_version, version))
-                sys.stderr.write(f"D\n")
 
             conn.commit()
     except Exception as e:
@@ -147,8 +142,6 @@ def insert_version_info(conn, data):
 def insert_tables_info(conn, data):
     try:
         with conn.cursor() as cur:
-
-            
             # Insert new table data
             for record in data:
                 cur.execute("""
@@ -158,6 +151,32 @@ def insert_tables_info(conn, data):
             
             conn.commit()
     except Exception as e:
+        conn.rollback()
+        raise e
+
+def insert_indexes_info(conn, data):
+    try:
+        with conn.cursor() as cur:
+            # Insert new index data
+            for record in data:
+                sys.stderr.write(f"{record}\n")
+               
+                cur.execute("""
+                    INSERT INTO indexes (name, oid, table_oid, schema, definition)
+                    VALUES (%s, %s, %s, %s, %s)
+                    ON CONFLICT DO NOTHING;
+                """, (
+                    record['index_name'],
+                    record['index_oid'],
+                    record['table_oid'],
+                    record['schema_name'],
+                    record['index_definition']
+                ))
+            
+            conn.commit()
+    except Exception as e:
+        sys.stderr.write(f"{e}\n")
+
         conn.rollback()
         raise e
 
@@ -184,7 +203,6 @@ def process_message(message):
                     response = s3.get_object(Bucket=bucket, Key=file_key)
                     file_content = response['Body'].read().decode('utf-8')
                     
-                    sys.stderr.write(f"Successfully downloaded file into memory\n")
                     
                     conn = get_db_connection()
                     try:
@@ -192,6 +210,8 @@ def process_message(message):
                             insert_version_info(conn, process_csv_to_dict(file_content))
                         elif 'tables' in file_key:
                             insert_tables_info(conn, process_csv_to_dict(file_content))
+                        elif 'index' in file_key:
+                            insert_indexes_info(conn, process_csv_to_dict(file_content))
                         else:
                             # Handle CSV files (activity and statements)
                             data_list = process_csv_to_dict(file_content)
@@ -217,7 +237,6 @@ def process_message(message):
                                     record['sample_time'] = datetime.fromisoformat(record.pop('now').replace('Z', '+00:00'))
                                     insert_pg_stat_statements(conn, record)
                                 
-                        sys.stderr.write(f"Successfully processed {file_key} data\n")
                     except Exception as e:
                         sys.stderr.write(f"Error processing data: {str(e)}\n")
                         raise e
@@ -235,7 +254,6 @@ def main():
     while True:
         try:
             # Receive messages from SQS
-            sys.stderr.write(f"{queue_url}")
             response = sqs.receive_message(
                 QueueUrl=queue_url,
                 MaxNumberOfMessages=10,

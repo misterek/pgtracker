@@ -102,14 +102,14 @@ if __name__ == "__main__":
             *,
             now()
         FROM pg_stat_statements;
-        """, 30, "pg_stat_statements"),
+        """, 5, "pg_stat_statements"),
         ("SELECT version(), now(); ", 300, "version"),
         ("""
         SELECT oid, relname AS table_name, relnamespace::regnamespace AS schema_name, now()
 FROM pg_class
 WHERE relkind = 'r'  -- 'r' means regular table
   AND relnamespace::regnamespace NOT IN ('pg_catalog', 'information_schema');
-  """, 60, "tables"),
+  """, 5, "tables"),
   (
     """
     SELECT 
@@ -117,7 +117,8 @@ WHERE relkind = 'r'  -- 'r' means regular table
     i.relname AS index_name,  -- Name of the index
     t.oid AS table_oid,       -- OID of the table the index belongs to
     s.nspname AS schema_name, -- Schema name
-    pg_get_indexdef(i.oid) AS index_definition -- SQL definition of the index
+    pg_get_indexdef(i.oid) AS index_definition, -- SQL definition of the index
+    now()
 FROM 
     pg_class i
 JOIN 
@@ -130,7 +131,7 @@ WHERE
     s.nspname NOT IN ('pg_catalog', 'information_schema', 'pg_toast')
 ORDER BY 
     s.nspname, i.relname;"""
-  , 60, "index")
+  , 5, "index")
 
     ]
 
