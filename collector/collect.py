@@ -102,7 +102,9 @@ if __name__ == "__main__":
             *,
             now()
         FROM pg_stat_statements;
-        """, 30, "pg_stat_statements")
+        """, 30, "pg_stat_statements"),
+        ("SELECT version(), now(); ", 300, "version")
+
     ]
 
     print(DATABASE_DSN)

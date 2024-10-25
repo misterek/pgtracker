@@ -6,6 +6,7 @@ import sys
 import psycopg2
 import csv
 import io
+import re
 from datetime import datetime
 
 # Initialize AWS clients with localstack endpoint
@@ -95,19 +96,12 @@ def insert_pg_stat_activity(conn, data):
         raise e
 
 def insert_pg_stat_statements(conn, data):
-    print(data, file=sys.stderr)
-    print(type(data), file=sys.stderr)
-    #print(my_dict.keys(), file=sys.stderr)
-    
-
-
     try:
         with conn.cursor() as cur:
             table_name = "pss"
             columns = ', '.join(data.keys())
             values_placeholders = ', '.join([f'%({key})s' for key in data.keys()])
 
-            # Create the SQL query dynamically
             query = f"""
                 INSERT INTO {table_name} ({columns})
                 VALUES ({values_placeholders});
@@ -116,6 +110,36 @@ def insert_pg_stat_statements(conn, data):
             cur.execute(query, data)
             conn.commit()
     
+    except Exception as e:
+        conn.rollback()
+        raise e
+
+def insert_version_info(conn, data):
+    sys.stderr.write(f"{data}")
+    data = data[0]
+
+    try:
+        with conn.cursor() as cur:
+            # Check if version info already exists
+            cur.execute("SELECT COUNT(*) FROM db_info")
+            
+            sys.stderr.write(f"A\n")
+
+            count = cur.fetchone()[0]
+            sys.stderr.write(f"B\n")
+
+            if count == 0:
+                # Insert new version info if table is empty
+                full_version = data['version']
+                version = full_version.split()[1]
+                sys.stderr.write(f"C\n")
+                cur.execute("""
+                    INSERT INTO db_info (full_version, version)
+                    VALUES (%s, %s)
+                """, (full_version, version))
+                sys.stderr.write(f"D\n")
+
+            conn.commit()
     except Exception as e:
         conn.rollback()
         raise e
@@ -147,28 +171,32 @@ def process_message(message):
                     
                     conn = get_db_connection()
                     try:
-                        data_list = process_csv_to_dict(file_content)
-                        timestamp_fields = ['backend_start', 'xact_start', 'query_start', 'state_change']
-                        
-                        for record in data_list:
-                            # Convert empty strings and 'None' to None for all fields
-                            for field_name, value in record.items():
-                                if value == 'None' or value == '':
-                                    record[field_name] = None
+                        if 'version' in file_key:
+                            insert_version_info(conn, process_csv_to_dict(file_content))
+                        else:
+                            # Handle CSV files (activity and statements)
+                            data_list = process_csv_to_dict(file_content)
+                            timestamp_fields = ['backend_start', 'xact_start', 'query_start', 'state_change']
                             
-                            # Convert numeric fields
-                            record = convert_empty_to_null(record)
-                            
-                            # Handle timestamps based on file type
-                            if 'pg_stat_activity' in file_key:
-                                for field in timestamp_fields:
-                                    if record.get(field):
-                                        record[field] = datetime.fromisoformat(record[field].replace('Z', '+00:00'))
-                                record['sample_time'] = datetime.fromisoformat(record.pop('now').replace('Z', '+00:00'))
-                                insert_pg_stat_activity(conn, record)
-                            elif 'pg_stat_statements' in file_key:
-                                record['sample_time'] = datetime.fromisoformat(record.pop('now').replace('Z', '+00:00'))
-                                insert_pg_stat_statements(conn, record)
+                            for record in data_list:
+                                # Convert empty strings and 'None' to None for all fields
+                                for field_name, value in record.items():
+                                    if value == 'None' or value == '':
+                                        record[field_name] = None
+                                
+                                # Convert numeric fields
+                                record = convert_empty_to_null(record)
+                                
+                                # Handle timestamps based on file type
+                                if 'pg_stat_activity' in file_key:
+                                    for field in timestamp_fields:
+                                        if record.get(field):
+                                            record[field] = datetime.fromisoformat(record[field].replace('Z', '+00:00'))
+                                    record['sample_time'] = datetime.fromisoformat(record.pop('now').replace('Z', '+00:00'))
+                                    insert_pg_stat_activity(conn, record)
+                                elif 'pg_stat_statements' in file_key:
+                                    record['sample_time'] = datetime.fromisoformat(record.pop('now').replace('Z', '+00:00'))
+                                    insert_pg_stat_statements(conn, record)
                                 
                         sys.stderr.write(f"Successfully processed {file_key} data\n")
                     except Exception as e:

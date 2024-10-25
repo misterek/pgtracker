@@ -80,5 +80,4 @@ CREATE TABLE IF NOT EXISTS db_info (
     id SERIAL ,
     full_version TEXT,
     version TEXT
-
 );
