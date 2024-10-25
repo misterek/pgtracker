@@ -1,0 +1,749 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": 4,
+  "links": [],
+  "panels": [
+    {
+      "datasource": {
+        "default": true,
+        "type": "grafana-postgresql-datasource",
+        "uid": "pgtracking-db"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "/^sample_time$/",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "11.2.2+security-01",
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "pgtracking-db"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT sample_time\nFROM pss\nWHERE $__timeFilter(sample_time)\nORDER BY sample_time DESC LIMIT 1;",
+          "refId": "A"
+        }
+      ],
+      "title": "As Of",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "default": true,
+        "type": "grafana-postgresql-datasource",
+        "uid": "pgtracking-db"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 6,
+        "y": 0
+      },
+      "id": 2,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "11.2.2+security-01",
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "pgtracking-db"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "WITH latest AS (\n    SELECT sample_time\n    FROM pss\n    WHERE $__timeFilter(sample_time)\n    ORDER BY sample_time DESC LIMIT 1\n)\nSELECT COUNT(DISTINCT query) as unique_queries\nFROM pss\nWHERE sample_time = (SELECT sample_time FROM latest)\nAND query NOT LIKE '--%'\nAND query NOT LIKE '/* %'\nAND query NOT ILIKE 'create %'\nAND query NOT ILIKE 'alter %'\nAND query NOT ILIKE 'drop %'\nAND query NOT ILIKE 'grant %'\nAND query NOT ILIKE 'revoke %'\nAND query NOT ILIKE 'begin%'\nAND query NOT ILIKE 'commit%'\nAND query NOT ILIKE 'rollback%';\n",
+          "refId": "A"
+        }
+      ],
+      "title": "Unique Queries",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "default": true,
+        "type": "grafana-postgresql-datasource",
+        "uid": "pgtracking-db"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 12,
+        "y": 0
+      },
+      "id": 3,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "11.2.2+security-01",
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "pgtracking-db"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "WITH latest AS (\n    SELECT sample_time\n    FROM pss\n    WHERE $__timeFilter(sample_time)\n    ORDER BY sample_time DESC LIMIT 1\n)\nSELECT SUM(calls) as total_calls\nFROM pss\nWHERE sample_time = (SELECT sample_time FROM latest)\nAND query NOT LIKE '--%'\nAND query NOT LIKE '/* %'\nAND query NOT ILIKE 'create %'\nAND query NOT ILIKE 'alter %'\nAND query NOT ILIKE 'drop %'\nAND query NOT ILIKE 'grant %'\nAND query NOT ILIKE 'revoke %'\nAND query NOT ILIKE 'begin%'\nAND query NOT ILIKE 'commit%'\nAND query NOT ILIKE 'rollback%';",
+          "refId": "A"
+        }
+      ],
+      "title": "Total Query Executions",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "default": true,
+        "type": "grafana-postgresql-datasource",
+        "uid": "pgtracking-db"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "ms"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 18,
+        "y": 0
+      },
+      "id": 4,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "11.2.2+security-01",
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "pgtracking-db"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "WITH latest AS (\n    SELECT sample_time\n    FROM pss\n    WHERE $__timeFilter(sample_time)\n    ORDER BY sample_time DESC LIMIT 1\n)\nSELECT SUM(total_exec_time) as total_time\nFROM pss\nWHERE sample_time = (SELECT sample_time FROM latest)\nAND query NOT LIKE '--%'\nAND query NOT LIKE '/* %'\nAND query NOT ILIKE 'create %'\nAND query NOT ILIKE 'alter %'\nAND query NOT ILIKE 'drop %'\nAND query NOT ILIKE 'grant %'\nAND query NOT ILIKE 'revoke %'\nAND query NOT ILIKE 'begin%'\nAND query NOT ILIKE 'commit%'\nAND query NOT ILIKE 'rollback%';",
+          "refId": "A"
+        }
+      ],
+      "title": "Total Execution Time",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "default": true,
+        "type": "grafana-postgresql-datasource",
+        "uid": "pgtracking-db"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "ms/min"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 4
+      },
+      "id": 5,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true,
+          "width": 300
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "pgtracking-db"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "WITH time_series AS (\n  SELECT\n    sample_time,\n    query,\n    total_exec_time,\n    LAG(total_exec_time) OVER (PARTITION BY query ORDER BY sample_time) as prev_total_exec_time,\n    EXTRACT(EPOCH FROM (sample_time - LAG(sample_time) OVER (PARTITION BY query ORDER BY sample_time))) as time_diff\n  FROM pss\n  WHERE $__timeFilter(sample_time)\n  AND query NOT LIKE '--%'\n  AND query NOT LIKE '/* %'\n  AND query NOT ILIKE 'create %'\n  AND query NOT ILIKE 'alter %'\n  AND query NOT ILIKE 'drop %'\n  AND query NOT ILIKE 'grant %'\n  AND query NOT ILIKE 'revoke %'\n  AND query NOT ILIKE 'begin%'\n  AND query NOT ILIKE 'commit%'\n  AND query NOT ILIKE 'rollback%'\n),\ntop_queries AS (\n  SELECT DISTINCT ON (query) query\n  FROM time_series\n  WHERE prev_total_exec_time IS NOT NULL\n  ORDER BY query, (total_exec_time - prev_total_exec_time) / NULLIF(time_diff, 0) * 60 DESC\n  LIMIT 5\n)\nSELECT\n  sample_time as time,\n  LEFT(query, 50) as metric,\n  (total_exec_time - prev_total_exec_time) / NULLIF(time_diff, 0) * 60 as value\nFROM time_series\nWHERE query IN (SELECT query FROM top_queries)\nAND prev_total_exec_time IS NOT NULL\nORDER BY sample_time;",
+          "refId": "A"
+        }
+      ],
+      "title": "Top 5 Queries by Execution Time Rate (ms/min)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "default": true,
+        "type": "grafana-postgresql-datasource",
+        "uid": "pgtracking-db"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "ops"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 4
+      },
+      "id": 6,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true,
+          "width": 300
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "pgtracking-db"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "WITH time_series AS (\n  SELECT\n    sample_time,\n    query,\n    calls,\n    LAG(calls) OVER (PARTITION BY query ORDER BY sample_time) as prev_calls,\n    EXTRACT(EPOCH FROM (sample_time - LAG(sample_time) OVER (PARTITION BY query ORDER BY sample_time))) as time_diff\n  FROM pss\n  WHERE $__timeFilter(sample_time)\n  AND query NOT LIKE '--%'\n  AND query NOT LIKE '/* %'\n  AND query NOT ILIKE 'create %'\n  AND query NOT ILIKE 'alter %'\n  AND query NOT ILIKE 'drop %'\n  AND query NOT ILIKE 'grant %'\n  AND query NOT ILIKE 'revoke %'\n  AND query NOT ILIKE 'begin%'\n  AND query NOT ILIKE 'commit%'\n  AND query NOT ILIKE 'rollback%'\n),\ntop_queries AS (\n  SELECT DISTINCT ON (query) query\n  FROM time_series\n  WHERE prev_calls IS NOT NULL\n  ORDER BY query, (calls - prev_calls) / NULLIF(time_diff, 0) DESC\n  LIMIT 5\n)\nSELECT\n  sample_time as time,\n  LEFT(query, 50) as metric,\n  (calls - prev_calls) / NULLIF(time_diff, 0) as value\nFROM time_series\nWHERE query IN (SELECT query FROM top_queries)\nAND prev_calls IS NOT NULL\nORDER BY sample_time;",
+          "refId": "A"
+        }
+      ],
+      "title": "Top 5 Queries by Call Rate (calls/sec)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "default": true,
+        "type": "grafana-postgresql-datasource",
+        "uid": "pgtracking-db"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "ms"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 12
+      },
+      "id": 7,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true,
+          "width": 300
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "pgtracking-db"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "WITH time_series AS (\n  SELECT\n    sample_time,\n    query,\n    mean_exec_time,\n    LAG(mean_exec_time) OVER (PARTITION BY query ORDER BY sample_time) as prev_mean_exec_time,\n    EXTRACT(EPOCH FROM (sample_time - LAG(sample_time) OVER (PARTITION BY query ORDER BY sample_time))) as time_diff\n  FROM pss\n  WHERE $__timeFilter(sample_time)\n  AND query NOT LIKE '--%'\n  AND query NOT LIKE '/* %'\n  AND query NOT ILIKE 'create %'\n  AND query NOT ILIKE 'alter %'\n  AND query NOT ILIKE 'drop %'\n  AND query NOT ILIKE 'grant %'\n  AND query NOT ILIKE 'revoke %'\n  AND query NOT ILIKE 'begin%'\n  AND query NOT ILIKE 'commit%'\n  AND query NOT ILIKE 'rollback%'\n),\ntop_queries AS (\n  SELECT DISTINCT ON (query) query\n  FROM time_series\n  WHERE prev_mean_exec_time IS NOT NULL\n  ORDER BY query, mean_exec_time DESC\n  LIMIT 5\n)\nSELECT\n  sample_time as time,\n  LEFT(query, 50) as metric,\n  mean_exec_time as value\nFROM time_series\nWHERE query IN (SELECT query FROM top_queries)\nAND prev_mean_exec_time IS NOT NULL\nORDER BY sample_time;",
+          "refId": "A"
+        }
+      ],
+      "title": "Top 5 Queries by Mean Execution Time (ms)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "default": true,
+        "type": "grafana-postgresql-datasource",
+        "uid": "pgtracking-db"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "blocks/min"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 12
+      },
+      "id": 8,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true,
+          "width": 300
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "pgtracking-db"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "WITH time_series AS (\n  SELECT\n    sample_time,\n    query,\n    (shared_blks_read + shared_blks_written) as io_blocks,\n    LAG(shared_blks_read + shared_blks_written) OVER (PARTITION BY query ORDER BY sample_time) as prev_io_blocks,\n    EXTRACT(EPOCH FROM (sample_time - LAG(sample_time) OVER (PARTITION BY query ORDER BY sample_time))) as time_diff\n  FROM pss\n  WHERE $__timeFilter(sample_time)\n  AND query NOT LIKE '--%'\n  AND query NOT LIKE '/* %'\n  AND query NOT ILIKE 'create %'\n  AND query NOT ILIKE 'alter %'\n  AND query NOT ILIKE 'drop %'\n  AND query NOT ILIKE 'grant %'\n  AND query NOT ILIKE 'revoke %'\n  AND query NOT ILIKE 'begin%'\n  AND query NOT ILIKE 'commit%'\n  AND query NOT ILIKE 'rollback%'\n),\ntop_queries AS (\n  SELECT DISTINCT ON (query) query\n  FROM time_series\n  WHERE prev_io_blocks IS NOT NULL\n  ORDER BY query, (io_blocks - prev_io_blocks) / NULLIF(time_diff, 0) * 60 DESC\n  LIMIT 5\n)\nSELECT\n  sample_time as time,\n  LEFT(query, 50) as metric,\n  (io_blocks - prev_io_blocks) / NULLIF(time_diff, 0) * 60 as value\nFROM time_series\nWHERE query IN (SELECT query FROM top_queries)\nAND prev_io_blocks IS NOT NULL\nORDER BY sample_time;",
+          "refId": "A"
+        }
+      ],
+      "title": "Top 5 Queries by I/O Rate (blocks/min)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "default": true,
+        "type": "grafana-postgresql-datasource",
+        "uid": "pgtracking-db"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 12,
+        "w": 24,
+        "x": 0,
+        "y": 20
+      },
+      "id": 9,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "total_exec_time"
+          }
+        ]
+      },
+      "pluginVersion": "11.2.2+security-01",
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "pgtracking-db"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "WITH latest AS (\n    SELECT sample_time\n    FROM pss\n    WHERE $__timeFilter(sample_time)\n    ORDER BY sample_time DESC LIMIT 1\n)\nSELECT \n    query,\n    calls,\n    total_exec_time,\n    mean_exec_time,\n    rows,\n    shared_blks_hit,\n    shared_blks_read,\n    shared_blks_dirtied,\n    shared_blks_written,\n    local_blks_hit,\n    local_blks_read,\n    local_blks_dirtied,\n    local_blks_written,\n    temp_blks_read,\n    temp_blks_written\nFROM pss\nWHERE sample_time = (SELECT sample_time FROM latest)\nAND query NOT LIKE '--%'\nAND query NOT LIKE '/* %'\nAND query NOT ILIKE 'create %'\nAND query NOT ILIKE 'alter %'\nAND query NOT ILIKE 'drop %'\nAND query NOT ILIKE 'grant %'\nAND query NOT ILIKE 'revoke %'\nAND query NOT ILIKE 'begin%'\nAND query NOT ILIKE 'commit%'\nAND query NOT ILIKE 'rollback%'\nORDER BY total_exec_time DESC;",
+          "refId": "A"
+        }
+      ],
+      "title": "Current Query Statistics",
+      "type": "table"
+    }
+  ],
+  "refresh": "5s",
+  "schemaVersion": 39,
+  "tags": [],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "PG Stat Statements History",
+  "uid": "pg_stat_statements",
+  "version": 1,
+  "weekStart": ""
+}
