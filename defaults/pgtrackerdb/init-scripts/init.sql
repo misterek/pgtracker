@@ -94,7 +94,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_tables_on_oid ON tables(oid);
 CREATE TABLE IF NOT EXISTS indexes (
     id SERIAL,
     name TEXT,
-    oid OID,
+    oid OID UNIQUE,  -- Ensure each index has a unique OID
     table_oid OID REFERENCES tables(oid),
     schema TEXT,
     definition TEXT

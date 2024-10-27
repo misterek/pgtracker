@@ -164,7 +164,7 @@ def insert_indexes_info(conn, data):
                 cur.execute("""
                     INSERT INTO indexes (name, oid, table_oid, schema, definition)
                     VALUES (%s, %s, %s, %s, %s)
-                    ON CONFLICT DO NOTHING;
+                    ON CONFLICT (oid) DO NOTHING;
                 """, (
                     record['index_name'],
                     record['index_oid'],
